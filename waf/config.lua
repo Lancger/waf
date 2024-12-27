@@ -29,7 +29,7 @@ config_post_check = "on"
 --config waf output redirect/html
 config_waf_output = "html"
 --if config_waf_output ,setting url
-config_waf_redirect_url = "https://www.unixhot.com"
+config_waf_redirect_url = "https://www.baidu.com"
 
 config_output_html = [[
 <!DOCTYPE html>
@@ -37,63 +37,73 @@ config_output_html = [[
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>访问被拦截</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>访问拦截 - 安全警告</title>
+    <!-- 引入Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(120deg, #2b2b2b, #1e1e1e);
+            color: #ffffff;
             height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin: 0;
         }
+
         .container {
-            text-align: center;
-            background-color: #fff;
+            background: rgba(255, 255, 255, 0.1);
             padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            text-align: center;
             max-width: 600px;
         }
+
         h1 {
-            color: #e74c3c;
-            margin-bottom: 20px;
+            color: #ff4c4c;
+            animation: pulse 2s infinite;
         }
-        p {
-            margin: 20px 0;
-            line-height: 1.6;
-        }
+
         .icon {
-            font-size: 50px;
-            color: #3498db;
+            width: 80px;
+            height: 80px;
             margin-bottom: 20px;
+            animation: pulse 2s infinite;
         }
-        .footer {
-            font-size: 12px;
-            color: #888;
-        }
-        .footer a {
-            color: #3498db;
-            text-decoration: none;
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="icon">
-            <i class="fas fa-shield-alt"></i>
+        <img src="https://img.icons8.com/ios-filled/80/ff4c4c/shield.png" alt="安全图标" class="icon">
+        <h1>访问拦截</h1>
+        <p>您的请求已被安全系统拦截。</p>
+        <p>请检查您的请求是否包含非法内容，或联系网站管理员获取更多信息。</p>
+        <div class="user-info">
+            <p>访问IP: <!-- 在这里插入用户IP，例如： -->{{USER_IP}}</p>
+            <p>访问UUID: <!-- 在这里插入UUID，例如： -->{{UUID}}</p>
         </div>
-        <h1>访问被拦截</h1>
-        <p>很抱歉，您提交的请求可能对网站造成威胁，请求已被管理员设置的策略阻断。</p>
-        <p>您的访问IP为：<strong>{{USER_IP}}</strong></p>
-        <p class="footer">
-            本页面为默认提示页面，如有疑问请联系网站管理员并提供UUID信息。
-            <br>您的请求UUID为：<strong>{{UUID}}</strong>
-        </p>
+        <a href="mailto:admin@example.com" class="btn btn-danger mt-3">联系管理员</a>
     </div>
+
+    <!-- 引入Bootstrap JS和依赖 -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
 ]]
