@@ -87,6 +87,7 @@ config_output_html=[[
         </div>
         <h1>访问被拦截</h1>
         <p>很抱歉，您提交的请求可能对网站造成威胁，请求已被管理员设置的策略阻断。</p>
+        <p>您的访问IP为：<strong>{{USER_IP}}</strong></p>
         <p class="footer">
             本页面为默认提示页面，如有疑问请联系网站管理员并提供UUID信息。
             <br>您的请求UUID为：<strong>1234-5678-ABCD-EFGH</strong>

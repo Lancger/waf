@@ -71,14 +71,29 @@ function log_record(method,url,data,ruletag)
     file:close()
 end
 
---WAF return
+-- --WAF return
+-- function waf_output()
+--     if config_waf_output == "redirect" then
+--         ngx.redirect(config_waf_redirect_url, 301)
+--     else
+--         ngx.header.content_type = "text/html"
+--         ngx.status = ngx.HTTP_FORBIDDEN
+--         ngx.say(config_output_html)
+--         ngx.exit(ngx.status)
+--     end
+-- end
+
+-- WAF return
 function waf_output()
+    local user_ip = get_client_ip()  -- Get the client's IP address
+    local output_html = config_output_html:gsub("{{USER_IP}}", user_ip)  -- Replace placeholder with actual IP
+
     if config_waf_output == "redirect" then
         ngx.redirect(config_waf_redirect_url, 301)
     else
         ngx.header.content_type = "text/html"
         ngx.status = ngx.HTTP_FORBIDDEN
-        ngx.say(config_output_html)
+        ngx.say(output_html)
         ngx.exit(ngx.status)
     end
 end
