@@ -42,36 +42,7 @@ function get_rule(rulefilename)
 end
 
 --WAF log record for json,(use logstash codec => json)
--- function log_record(method,url,data,ruletag)
---     local cjson = require("cjson")
---     local io = require 'io'
---     local LOG_PATH = config_log_dir
---     local CLIENT_IP = get_client_ip()
---     local USER_AGENT = get_user_agent()
---     local SERVER_NAME = ngx.var.server_name
---     local LOCAL_TIME = ngx.localtime()
---     local log_json_obj = {
---                  client_ip = CLIENT_IP,
---                  local_time = LOCAL_TIME,
---                  server_name = SERVER_NAME,
---                  user_agent = USER_AGENT,
---                  attack_method = method,
---                  req_url = url,
---                  req_data = data,
---                  rule_tag = ruletag,
---               }
---     local LOG_LINE = cjson.encode(log_json_obj)
---     local LOG_NAME = LOG_PATH..'/'..ngx.today().."_waf.log"
---     local file = io.open(LOG_NAME,"a")
---     if file == nil then
---         return
---     end
---     file:write(LOG_LINE.."\n")
---     file:flush()
---     file:close()
--- end
-
-function log_record(method, url, data, ruletag)
+function log_record(method,url,data,ruletag)
     local cjson = require("cjson")
     local io = require 'io'
     local LOG_PATH = config_log_dir
@@ -79,38 +50,25 @@ function log_record(method, url, data, ruletag)
     local USER_AGENT = get_user_agent()
     local SERVER_NAME = ngx.var.server_name
     local LOCAL_TIME = ngx.localtime()
-    
-    ngx.log(ngx.DEBUG, "Entering log_record function")
-
     local log_json_obj = {
-        client_ip = CLIENT_IP,
-        local_time = LOCAL_TIME,
-        server_name = SERVER_NAME,
-        user_agent = USER_AGENT,
-        attack_method = method,
-        req_url = url,
-        req_data = data,
-        rule_tag = ruletag,
-    }
-    
-    local LOG_LINE, err = cjson.encode(log_json_obj)
-    if not LOG_LINE then
-        ngx.log(ngx.ERR, "Failed to encode log JSON: ", err)
-        return
-    end
-    
+                 client_ip = CLIENT_IP,
+                 local_time = LOCAL_TIME,
+                 server_name = SERVER_NAME,
+                 user_agent = USER_AGENT,
+                 attack_method = method,
+                 req_url = url,
+                 req_data = data,
+                 rule_tag = ruletag,
+              }
+    local LOG_LINE = cjson.encode(log_json_obj)
     local LOG_NAME = LOG_PATH..'/'..ngx.today().."_waf.log"
-    local file, err = io.open(LOG_NAME, "a")
-    if not file then
-        ngx.log(ngx.ERR, "Failed to open log file: ", err)
+    local file = io.open(LOG_NAME,"a")
+    if file == nil then
         return
     end
-    
     file:write(LOG_LINE.."\n")
     file:flush()
     file:close()
-    
-    ngx.log(ngx.DEBUG, "Log record written successfully")
 end
 
 --WAF return
