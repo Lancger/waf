@@ -164,35 +164,6 @@ function user_agent_attack_check()
     return false
 end
 
--- -- 拒绝 POST 请求
--- function post_attack_check()
---     if config_post_check == "on" then
---         -- Ensure the request body is read
---         ngx.req.read_body()
-        
---         local POST_RULES = get_rule('post.rule')
---         local POST_ARGS = ngx.req.get_post_args()
---         for _, rule in pairs(POST_RULES) do
---             for key, val in pairs(POST_ARGS) do
---                 if type(val) == 'table' then
---                     POST_DATA = table.concat(val, " ")
---                 else
---                     POST_DATA = val
---                 end
---                 if POST_DATA and type(POST_DATA) ~= "boolean" and rule ~= "" and rulematch(unescape(POST_DATA), rule, "jo") then
---                     log_record('Deny_POST', ngx.var.request_uri, "-", rule)
---                     if config_waf_enable == "on" then
---                         waf_output()
---                         return true
---                     end
---                 end
---             end
---         end
---     end
---     return false
--- end
-
-
 -- 拒绝 POST 请求
 function post_attack_check()
     if config_post_check == "on" then
@@ -230,4 +201,14 @@ function post_attack_check()
         end
     end
     return false
+end
+
+-- Function to generate a random UUID
+local function generate_uuid()
+    local random = math.random
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and random(0, 15) or random(8, 11)
+        return string.format('%x', v)
+    end)
 end

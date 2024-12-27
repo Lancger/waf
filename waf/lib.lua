@@ -71,22 +71,21 @@ function log_record(method,url,data,ruletag)
     file:close()
 end
 
--- --WAF return
--- function waf_output()
---     if config_waf_output == "redirect" then
---         ngx.redirect(config_waf_redirect_url, 301)
---     else
---         ngx.header.content_type = "text/html"
---         ngx.status = ngx.HTTP_FORBIDDEN
---         ngx.say(config_output_html)
---         ngx.exit(ngx.status)
---     end
--- end
+-- Function to generate a random UUID
+local function generate_uuid()
+    local random = math.random
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and random(0, 15) or random(8, 11)
+        return string.format('%x', v)
+    end)
+end
 
 -- WAF return
 function waf_output()
     local user_ip = get_client_ip()  -- Get the client's IP address
-    local output_html = config_output_html:gsub("{{USER_IP}}", user_ip)  -- Replace placeholder with actual IP
+    local uuid = generate_uuid()  -- Generate a random UUID
+    local output_html = config_output_html:gsub("{{USER_IP}}", user_ip):gsub("{{UUID}}", uuid)  -- Replace placeholders
 
     if config_waf_output == "redirect" then
         ngx.redirect(config_waf_redirect_url, 301)

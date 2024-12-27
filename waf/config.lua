@@ -30,7 +30,8 @@ config_post_check = "on"
 config_waf_output = "html"
 --if config_waf_output ,setting url
 config_waf_redirect_url = "https://www.unixhot.com"
-config_output_html=[[
+
+config_output_html = [[
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -90,7 +91,7 @@ config_output_html=[[
         <p>您的访问IP为：<strong>{{USER_IP}}</strong></p>
         <p class="footer">
             本页面为默认提示页面，如有疑问请联系网站管理员并提供UUID信息。
-            <br>您的请求UUID为：<strong>1234-5678-ABCD-EFGH</strong>
+            <br>您的请求UUID为：<strong>{{UUID}}</strong>
         </p>
     </div>
 </body>
