@@ -1,7 +1,7 @@
 # WAF 
 
 - 使用Nginx+Lua实现自定义WAF（Web application firewall）
-- 最近发现使用的人越来越多了，计划开始维护和增加新功能 2020.7.29 赵班长
+- 当config_output_html被设置时，WAF会返回指定的HTML内容，这个时候config_waf_redirect_url就不会作业。如果你希望使用重定向功能，就不要设置config_output_html，这两者是互斥的
 
 ## 项目背景介绍
 
