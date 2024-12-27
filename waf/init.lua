@@ -164,15 +164,30 @@ function user_agent_attack_check()
     return false
 end
 
---deny post
+-- 拒绝 POST 请求
 function post_attack_check()
     if config_post_check == "on" then
+        -- Ensure the request body is read
+        ngx.req.read_body()
+        
         local POST_RULES = get_rule('post.rule')
-        for _,rule in pairs(ARGS_RULES) do
-            local POST_ARGS = ngx.req.get_post_args()
+        local POST_ARGS = ngx.req.get_post_args()
+        for _, rule in pairs(POST_RULES) do
+            for key, val in pairs(POST_ARGS) do
+                if type(val) == 'table' then
+                    POST_DATA = table.concat(val, " ")
+                else
+                    POST_DATA = val
+                end
+                if POST_DATA and type(POST_DATA) ~= "boolean" and rule ~= "" and rulematch(unescape(POST_DATA), rule, "jo") then
+                    log_record('Deny_POST', ngx.var.request_uri, "-", rule)
+                    if config_waf_enable == "on" then
+                        waf_output()
+                        return true
+                    end
+                end
+            end
         end
-        return true
     end
     return false
 end
-
