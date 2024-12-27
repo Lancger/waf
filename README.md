@@ -75,7 +75,7 @@ nginx: configuration file /usr/local/openresty-1.17.8.2/nginx/conf/nginx.conf te
 [root@opsany ~]# cp -r ./waf/waf /usr/local/openresty/nginx/conf/
 [root@opsany ~]# vim /usr/local/openresty/nginx/conf/nginx.conf
 #在http{}中增加，注意路径，同时WAF日志默认存放在配置的日志目录，格式为日期_waf.log
-#WAF
+    # WAF
     lua_shared_dict limit 50m;
     lua_package_path "/usr/local/openresty/nginx/conf/waf/?.lua";
     init_by_lua_file "/usr/local/openresty/nginx/conf/waf/init.lua";
