@@ -183,6 +183,67 @@ error while loading shared libraries: libluajit-5.1.so.2: cannot open shared obj
 [root@opsany ~]# ln -s /usr/local/openresty-1.17.8.2/ /usr/local/openresty
 ```
 
+# 二、防御测试案例
+
+1、目录遍历攻击 (\.\./)
+
+```bash
+# 方式一
+curl "https://test.qq.top/hello?id=../etc/passwd"
+
+# 方式二
+curl -G "https://test.qq.top/" --data-urlencode "param=../etc/passwd"
+```
+
+2、匹配 :$ (\:\$)
+
+```bash
+curl -G "https://test.qq.top/hello" --data-urlencode "param=variable:$"
+```
+
+3、POST拦截攻击
+
+```bash
+# 1、POST拦截规则
+[root@iZ6we1o5jeys9hv9h596m4Z rule-config]# cat post.rule 
+\.\./
+select.+(from|limit)
+(?:(union(.*?)select))
+having|rongjitest
+sleep\((\s*)(\d*)(\s*)\)
+benchmark\((.*)\,(.*)\)
+base64_decode\(
+(?:from\W+information_schema\W)
+(?:(?:current_)user|database|schema|connection_id)\s*\(
+(?:etc\/\W*passwd)
+into(\s+)+(?:dump|out)file\s*
+group\s+by.+\(
+xwork.MethodAccessor
+(?:define|eval|file_get_contents|include|require|require_once|shell_exec|phpinfo|system|passthru|preg_\w+|execute|echo|print|print_r|var_dump|(fp)open|alert|showmodaldialog)\(
+xwork\.MethodAccessor
+(gopher|doc|php|glob|file|phar|zlib|ftp|ldap|dict|ogg|data)\:\/
+java\.lang
+\$_(GET|post|cookie|files|session|env|phplib|GLOBALS|SERVER)\[
+\<(iframe|script|body|img|layer|div|meta|style|base|object|input)
+(onmouseover|onerror|onload)\=
+malicious
+
+
+# 2、如何模拟触发POST请求拦截
+curl -X POST https://test.qq.top/ -d "data=eval("
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-Language" content="zh-cn" />
+<title>OpsAny｜Web应用防火墙</title>
+</head>
+<body>
+<h1 align="center"> 欢迎白帽子进行授权安全测试，安全漏洞请联系QQ：88888888
+</body>
+</html>
+```
+
 # 鸣谢
 
 参考两位大佬的项目，按项目需求二次改动而来
