@@ -1,6 +1,7 @@
 require 'init'
 
-function waf_main()
+-- Declare waf_main as a local function
+local function waf_main()
     if white_ip_check() then
     elseif black_ip_check() then
     elseif user_agent_attack_check() then
@@ -15,5 +16,5 @@ function waf_main()
     end
 end
 
+-- Call the local waf_main function
 waf_main()
-

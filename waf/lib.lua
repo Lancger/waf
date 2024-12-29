@@ -1,44 +1,44 @@
 --waf core lib
 require 'config'
 
---Get the client IP
+-- Get the client IP
 function get_client_ip()
-    CLIENT_IP = ngx.req.get_headers()["X_real_ip"]
-    if CLIENT_IP == nil then
-        CLIENT_IP = ngx.req.get_headers()["X_Forwarded_For"]
+    local client_ip = ngx.req.get_headers()["X_real_ip"]
+    if client_ip == nil then
+        client_ip = ngx.req.get_headers()["X_Forwarded_For"]
     end
-    if CLIENT_IP == nil then
-        CLIENT_IP  = ngx.var.remote_addr
+    if client_ip == nil then
+        client_ip = ngx.var.remote_addr
     end
-    if CLIENT_IP == nil then
-        CLIENT_IP  = "unknown"
+    if client_ip == nil then
+        client_ip = "unknown"
     end
-    return CLIENT_IP
+    return client_ip
 end
 
---Get the client user agent
+-- Get the client user agent
 function get_user_agent()
-    USER_AGENT = ngx.var.http_user_agent
-    if USER_AGENT == nil then
-       USER_AGENT = "unknown"
+    local user_agent = ngx.var.http_user_agent
+    if user_agent == nil then
+       user_agent = "unknown"
     end
-    return USER_AGENT
+    return user_agent
 end
 
---Get WAF rule
+-- Get WAF rule
 function get_rule(rulefilename)
     local io = require 'io'
     local RULE_PATH = config_rule_dir
-    local RULE_FILE = io.open(RULE_PATH..'/'..rulefilename,"r")
+    local RULE_FILE = io.open(RULE_PATH..'/'..rulefilename, "r")
     if RULE_FILE == nil then
         return
     end
-    RULE_TABLE = {}
+    local RULE_TABLE = {}  -- Declare RULE_TABLE as a local variable
     for line in RULE_FILE:lines() do
-        table.insert(RULE_TABLE,line)
+        table.insert(RULE_TABLE, line)
     end
     RULE_FILE:close()
-    return(RULE_TABLE)
+    return RULE_TABLE
 end
 
 --WAF log record for json,(use logstash codec => json)
