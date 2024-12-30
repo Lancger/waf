@@ -56,26 +56,26 @@ function white_url_check()
     end
 end
 
---deny cc attack
+-- deny cc attack
 function cc_attack_check()
     if config_cc_check == "on" then
-        local ATTACK_URI=ngx.var.uri
-        local CC_TOKEN = get_client_ip()..ATTACK_URI
+        local ATTACK_URI = ngx.var.uri
+        local CC_TOKEN = get_client_ip() .. ATTACK_URI
         local limit = ngx.shared.limit
-        CCcount=tonumber(string.match(config_cc_rate,'(.*)/'))
-        CCseconds=tonumber(string.match(config_cc_rate,'/(.*)'))
-        local req,_ = limit:get(CC_TOKEN)
+        local CCcount = tonumber(string.match(config_cc_rate, '(.*)/'))
+        local CCseconds = tonumber(string.match(config_cc_rate, '/(.*)'))
+        local req, _ = limit:get(CC_TOKEN)
         if req then
             if req > CCcount then
-                log_record('CC_Attack',ngx.var.request_uri,"-","-")
+                log_record('CC_Attack', ngx.var.request_uri, "-", "-")
                 if config_waf_enable == "on" then
                     ngx.exit(403)
                 end
             else
-                limit:incr(CC_TOKEN,1)
+                limit:incr(CC_TOKEN, 1)
             end
         else
-            limit:set(CC_TOKEN,1,CCseconds)
+            limit:set(CC_TOKEN, 1, CCseconds)
         end
     end
     return false
@@ -120,19 +120,45 @@ function url_attack_check()
 end
 
 --deny url args
+-- function url_args_attack_check()
+--     if config_url_args_check == "on" then
+--         local ARGS_RULES = get_rule('args.rule')
+--         for _,rule in pairs(ARGS_RULES) do
+--             local REQ_ARGS = ngx.req.get_uri_args()
+--             for key, val in pairs(REQ_ARGS) do
+--                 if type(val) == 'table' then
+--                     ARGS_DATA = table.concat(val, " ")
+--                 else
+--                     ARGS_DATA = val
+--                 end
+--                 if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
+--                     log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
+--                     if config_waf_enable == "on" then
+--                         waf_output()
+--                         return true
+--                     end
+--                 end
+--             end
+--         end
+--     end
+--     return false
+-- end
+
+-- deny url args
 function url_args_attack_check()
     if config_url_args_check == "on" then
         local ARGS_RULES = get_rule('args.rule')
-        for _,rule in pairs(ARGS_RULES) do
+        for _, rule in pairs(ARGS_RULES) do
             local REQ_ARGS = ngx.req.get_uri_args()
             for key, val in pairs(REQ_ARGS) do
+                local ARGS_DATA
                 if type(val) == 'table' then
                     ARGS_DATA = table.concat(val, " ")
                 else
                     ARGS_DATA = val
                 end
-                if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
-                    log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
+                if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~= "" and rulematch(unescape(ARGS_DATA), rule, "jo") then
+                    log_record('Deny_URL_Args', ngx.var.request_uri, "-", rule)
                     if config_waf_enable == "on" then
                         waf_output()
                         return true
@@ -164,7 +190,7 @@ function user_agent_attack_check()
     return false
 end
 
--- 拒绝 POST 请求
+-- deny POST requests
 function post_attack_check()
     if config_post_check == "on" then
         -- Ensure the request body is read
@@ -172,14 +198,27 @@ function post_attack_check()
         
         local POST_RULES = get_rule('post.rule')
         local POST_ARGS = ngx.req.get_post_args()
+        
+        -- Log the POST parameters
+        for key, val in pairs(POST_ARGS) do
+            local POST_DATA  -- Declare POST_DATA as a local variable
+            if type(val) == 'table' then
+                POST_DATA = table.concat(val, " ")
+            else
+                POST_DATA = tostring(val)  -- Convert POST_DATA to string to avoid boolean issues
+            end
+            -- ngx.log(ngx.ERR, "POST parameter: ", key, " = ", POST_DATA)
+        end
+        
         for _, rule in pairs(POST_RULES) do
             for key, val in pairs(POST_ARGS) do
+                local POST_DATA  -- Declare POST_DATA as a local variable
                 if type(val) == 'table' then
                     POST_DATA = table.concat(val, " ")
                 else
-                    POST_DATA = val
+                    POST_DATA = tostring(val)  -- Convert POST_DATA to string to avoid boolean issues
                 end
-                if POST_DATA and type(POST_DATA) ~= "boolean" and rule ~= "" and rulematch(unescape(POST_DATA), rule, "jo") then
+                if POST_DATA and rule ~= "" and rulematch(unescape(POST_DATA), rule, "jo") then
                     log_record('Deny_POST', ngx.var.request_uri, "-", rule)
                     if config_waf_enable == "on" then
                         waf_output()
@@ -190,4 +229,14 @@ function post_attack_check()
         end
     end
     return false
+end
+
+-- Function to generate a random UUID
+local function generate_uuid()
+    local random = math.random
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and random(0, 15) or random(8, 11)
+        return string.format('%x', v)
+    end)
 end
