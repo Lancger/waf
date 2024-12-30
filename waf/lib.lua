@@ -41,8 +41,18 @@ function get_rule(rulefilename)
     return RULE_TABLE
 end
 
+-- Function to generate a random UUID
+function generate_uuid()
+    local random = math.random
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and random(0, 15) or random(8, 11)
+        return string.format('%x', v)
+    end)
+end
+
 --WAF log record for json,(use logstash codec => json)
-function log_record(method,url,data,ruletag)
+function log_record(method, url, data, ruletag)
     local cjson = require("cjson")
     local io = require 'io'
     local LOG_PATH = config_log_dir
@@ -50,35 +60,29 @@ function log_record(method,url,data,ruletag)
     local USER_AGENT = get_user_agent()
     local SERVER_NAME = ngx.var.server_name
     local LOCAL_TIME = ngx.localtime()
+    local UUID = generate_uuid()  -- Generate a UUID for the log entry
+
     local log_json_obj = {
-                 client_ip = CLIENT_IP,
-                 local_time = LOCAL_TIME,
-                 server_name = SERVER_NAME,
-                 user_agent = USER_AGENT,
-                 attack_method = method,
-                 req_url = url,
-                 req_data = data,
-                 rule_tag = ruletag,
-              }
+        client_ip = CLIENT_IP,
+        local_time = LOCAL_TIME,
+        server_name = SERVER_NAME,
+        user_agent = USER_AGENT,
+        attack_method = method,
+        req_url = url,
+        req_data = data,
+        rule_tag = ruletag,
+        uuid = UUID  -- Include the UUID in the log
+    }
+
     local LOG_LINE = cjson.encode(log_json_obj)
-    local LOG_NAME = LOG_PATH..'/'..ngx.today().."_waf.log"
-    local file = io.open(LOG_NAME,"a")
+    local LOG_NAME = LOG_PATH..'/'..SERVER_NAME..'_'..ngx.today()..".log"  -- Use full server name in log file name
+    local file = io.open(LOG_NAME, "a")
     if file == nil then
         return
     end
     file:write(LOG_LINE.."\n")
     file:flush()
     file:close()
-end
-
--- Function to generate a random UUID
-local function generate_uuid()
-    local random = math.random
-    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    return string.gsub(template, '[xy]', function (c)
-        local v = (c == 'x') and random(0, 15) or random(8, 11)
-        return string.format('%x', v)
-    end)
 end
 
 -- WAF return
