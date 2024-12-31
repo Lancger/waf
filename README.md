@@ -4,6 +4,33 @@
 - 当config_output_html被设置时，WAF会返回指定的HTML内容，这个时候config_waf_redirect_url就不会作业。如果你希望使用重定向功能，就不要设置config_output_html，这两者是互斥的
 - 新增redis共享黑白名单实现方式
 
+```bash
+#新增黑名单
+SADD blackip "192.211.193.137"
+
+#新增白名单
+SADD whiteip "192.211.193.137"
+
+#查看对应key的值
+127.0.0.1:6379> SMEMBERS whiteip
+1) "163.121.193.137"
+2) "192.211.193.137"
+```
+
+进阶配置-新增ttl设置验证
+```bash
+#方式一
+SADD whiteip "192.211.193.137"
+EXPIRE whiteip 3600              # Set TTL of 3600 seconds (1 hour) on the entire set
+
+#方式二
+在 Redis 中，无法通过一条命令同时向集合中添加元素并设置 TTL。你需要使用两条命令：一条用于添加元素，另一条用于设置 TTL。
+redis.call('SADD', KEYS[1], ARGV[1])
+redis.call('EXPIRE', KEYS[1], ARGV[2])
+
+EVAL "redis.call('SADD', KEYS[1], ARGV[1]); redis.call('EXPIRE', KEYS[1], ARGV[2])" 1 whiteip "192.211.193.137" 3600
+```
+
 ## 项目背景介绍
 
 ### 需求产生
