@@ -203,31 +203,6 @@ function url_attack_check()
     return false
 end
 
---deny url args
--- function url_args_attack_check()
---     if config_url_args_check == "on" then
---         local ARGS_RULES = get_rule('args.rule')
---         for _,rule in pairs(ARGS_RULES) do
---             local REQ_ARGS = ngx.req.get_uri_args()
---             for key, val in pairs(REQ_ARGS) do
---                 if type(val) == 'table' then
---                     ARGS_DATA = table.concat(val, " ")
---                 else
---                     ARGS_DATA = val
---                 end
---                 if ARGS_DATA and type(ARGS_DATA) ~= "boolean" and rule ~="" and rulematch(unescape(ARGS_DATA),rule,"jo") then
---                     log_record('Deny_URL_Args',ngx.var.request_uri,"-",rule)
---                     if config_waf_enable == "on" then
---                         waf_output()
---                         return true
---                     end
---                 end
---             end
---         end
---     end
---     return false
--- end
-
 -- deny url args
 function url_args_attack_check()
     if config_url_args_check == "on" then
