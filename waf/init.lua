@@ -43,6 +43,50 @@ function get_rule_from_redis(rule_key)
     return rules
 end
 
+-- -- 从 Redis 获取规则的函数，并记录日志
+-- function get_rule_from_redis(rule_key)
+--     local red = redis:new()
+--     red:set_timeout(1000)  -- 设置超时时间为 1 秒
+
+--     -- 连接到 Redis
+--     local ok, err = red:connect("127.0.0.1", 6379)
+--     if not ok then
+--         ngx.log(ngx.ERR, "连接 Redis 失败: ", err)
+--         log_redis_error("connect", err)
+--         return nil
+--     end
+
+--     -- 进行账号密码认证
+--     local username = "your_username"  -- 替换为你的用户名
+--     local password = "your_password"  -- 替换为你的密码
+--     local ok, err = red:auth(username .. ":" .. password)
+--     if not ok then
+--         ngx.log(ngx.ERR, "Redis 认证失败: ", err)
+--         log_redis_error("auth", err)
+--         return nil
+--     end
+
+--     -- 从 Redis 获取规则
+--     local rules, err = red:smembers(rule_key)
+--     if not rules then
+--         ngx.log(ngx.ERR, "从 Redis 获取规则失败: ", err)
+--         log_redis_error("get", err, rule_key)
+--         return nil
+--     end
+
+--     -- 记录成功获取规则的日志
+--     ngx.log(ngx.INFO, "成功从 Redis 获取规则，键: ", rule_key)
+
+--     -- 关闭连接并设置连接池
+--     local ok, err = red:set_keepalive(10000, 100)
+--     if not ok then
+--         ngx.log(ngx.ERR, "设置 keepalive 失败: ", err)
+--         log_redis_error("set_keepalive", err)
+--     end
+
+--     return rules
+-- end
+
 -- 记录 Redis 错误日志
 function log_redis_error(operation, err, key)
     local log_message = {
