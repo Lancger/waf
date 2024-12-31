@@ -2,19 +2,67 @@
 require 'config'
 require 'lib'
 
---args
+local redis = require "resty.redis"
+local cjson = require "cjson"
+
+-- 定义正则匹配和 URI 解码函数
 local rulematch = ngx.re.find
 local unescape = ngx.unescape_uri
 
---allow white ip
+-- 从 Redis 获取规则的函数，并记录日志
+function get_rule_from_redis(rule_key)
+    local red = redis:new()
+    red:set_timeout(1000)  -- 设置超时时间为 1 秒
+
+    -- 连接到 Redis
+    local ok, err = red:connect("127.0.0.1", 6379)
+    if not ok then
+        ngx.log(ngx.ERR, "连接 Redis 失败: ", err)
+        log_redis_error("connect", err)
+        return nil
+    end
+
+    -- 从 Redis 获取规则
+    local rules, err = red:smembers(rule_key)
+    if not rules then
+        ngx.log(ngx.ERR, "从 Redis 获取规则失败: ", err)
+        log_redis_error("get", err, rule_key)
+        return nil
+    end
+
+    -- 记录成功获取规则的日志
+    ngx.log(ngx.INFO, "成功从 Redis 获取规则，键: ", rule_key)
+
+    -- 关闭连接并设置连接池
+    local ok, err = red:set_keepalive(10000, 100)
+    if not ok then
+        ngx.log(ngx.ERR, "设置 keepalive 失败: ", err)
+        log_redis_error("set_keepalive", err)
+    end
+
+    return rules
+end
+
+-- 记录 Redis 错误日志
+function log_redis_error(operation, err, key)
+    local log_message = {
+        operation = operation,  -- 操作类型
+        error = err,            -- 错误信息
+        key = key or "N/A",     -- 相关键
+        timestamp = ngx.localtime()  -- 时间戳
+    }
+    ngx.log(ngx.ERR, "Redis 操作失败: ", cjson.encode(log_message))
+end
+
+-- 允许白名单 IP
 function white_ip_check()
-     if config_white_ip_check == "on" then
-        local IP_WHITE_RULE = get_rule('whiteip.rule')
+    if config_white_ip_check == "on" then
+        local IP_WHITE_RULE = get_rule_from_redis('whiteip')
         local WHITE_IP = get_client_ip()
         if IP_WHITE_RULE ~= nil then
-            for _,rule in pairs(IP_WHITE_RULE) do
-                if rule ~= "" and rulematch(WHITE_IP,rule,"jo") then
-                    log_record('White_IP',ngx.var_request_uri,"_","_")
+            for _, rule in pairs(IP_WHITE_RULE) do
+                if rule ~= "" and rulematch(WHITE_IP, rule, "jo") then
+                    log_record('White_IP', ngx.var.request_uri, "_", "_")
                     return true
                 end
             end
@@ -22,15 +70,15 @@ function white_ip_check()
     end
 end
 
---deny black ip
+-- 拒绝黑名单 IP
 function black_ip_check()
-     if config_black_ip_check == "on" then
-        local IP_BLACK_RULE = get_rule('blackip.rule')
+    if config_black_ip_check == "on" then
+        local IP_BLACK_RULE = get_rule_from_redis('blackip')
         local BLACK_IP = get_client_ip()
         if IP_BLACK_RULE ~= nil then
-            for _,rule in pairs(IP_BLACK_RULE) do
-                if rule ~= "" and rulematch(BLACK_IP,rule,"jo") then
-                    log_record('BlackList_IP',ngx.var_request_uri,"_","_")
+            for _, rule in pairs(IP_BLACK_RULE) do
+                if rule ~= "" and rulematch(BLACK_IP, rule, "jo") then
+                    log_record('BlackList_IP', ngx.var.request_uri, "_", "_")
                     if config_waf_enable == "on" then
                         ngx.exit(403)
                         return true
@@ -40,6 +88,42 @@ function black_ip_check()
         end
     end
 end
+
+-- 从配置文件获取黑白名单
+-- --allow white ip
+-- function white_ip_check()
+--      if config_white_ip_check == "on" then
+--         local IP_WHITE_RULE = get_rule('whiteip.rule')
+--         local WHITE_IP = get_client_ip()
+--         if IP_WHITE_RULE ~= nil then
+--             for _,rule in pairs(IP_WHITE_RULE) do
+--                 if rule ~= "" and rulematch(WHITE_IP,rule,"jo") then
+--                     log_record('White_IP',ngx.var_request_uri,"_","_")
+--                     return true
+--                 end
+--             end
+--         end
+--     end
+-- end
+
+-- --deny black ip
+-- function black_ip_check()
+--      if config_black_ip_check == "on" then
+--         local IP_BLACK_RULE = get_rule('blackip.rule')
+--         local BLACK_IP = get_client_ip()
+--         if IP_BLACK_RULE ~= nil then
+--             for _,rule in pairs(IP_BLACK_RULE) do
+--                 if rule ~= "" and rulematch(BLACK_IP,rule,"jo") then
+--                     log_record('BlackList_IP',ngx.var_request_uri,"_","_")
+--                     if config_waf_enable == "on" then
+--                         ngx.exit(403)
+--                         return true
+--                     end
+--                 end
+--             end
+--         end
+--     end
+-- end
 
 --allow white url
 function white_url_check()
