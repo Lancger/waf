@@ -293,6 +293,47 @@ function user_agent_attack_check()
     return false
 end
 
+-- -- deny POST requests
+-- function post_attack_check()
+--     if config_post_check == "on" then
+--         -- Ensure the request body is read
+--         ngx.req.read_body()
+        
+--         local POST_RULES = get_rule('post.rule')
+--         local POST_ARGS = ngx.req.get_post_args()
+        
+--         -- Log the POST parameters
+--         for key, val in pairs(POST_ARGS) do
+--             local POST_DATA  -- Declare POST_DATA as a local variable
+--             if type(val) == 'table' then
+--                 POST_DATA = table.concat(val, " ")
+--             else
+--                 POST_DATA = tostring(val)  -- Convert POST_DATA to string to avoid boolean issues
+--             end
+--             -- ngx.log(ngx.ERR, "POST parameter: ", key, " = ", POST_DATA)
+--         end
+        
+--         for _, rule in pairs(POST_RULES) do
+--             for key, val in pairs(POST_ARGS) do
+--                 local POST_DATA  -- Declare POST_DATA as a local variable
+--                 if type(val) == 'table' then
+--                     POST_DATA = table.concat(val, " ")
+--                 else
+--                     POST_DATA = tostring(val)  -- Convert POST_DATA to string to avoid boolean issues
+--                 end
+--                 if POST_DATA and rule ~= "" and rulematch(unescape(POST_DATA), rule, "jo") then
+--                     log_record('Deny_POST', ngx.var.request_uri, "-", rule)
+--                     if config_waf_enable == "on" then
+--                         waf_output()
+--                         return true
+--                     end
+--                 end
+--             end
+--         end
+--     end
+--     return false
+-- end
+
 -- deny POST requests
 function post_attack_check()
     if config_post_check == "on" then
@@ -302,30 +343,33 @@ function post_attack_check()
         local POST_RULES = get_rule('post.rule')
         local POST_ARGS = ngx.req.get_post_args()
         
-        -- Log the POST parameters
-        for key, val in pairs(POST_ARGS) do
-            local POST_DATA  -- Declare POST_DATA as a local variable
-            if type(val) == 'table' then
-                POST_DATA = table.concat(val, " ")
-            else
-                POST_DATA = tostring(val)  -- Convert POST_DATA to string to avoid boolean issues
-            end
-            -- ngx.log(ngx.ERR, "POST parameter: ", key, " = ", POST_DATA)
-        end
-        
-        for _, rule in pairs(POST_RULES) do
-            for key, val in pairs(POST_ARGS) do
+        -- Check if POST_RULES is not nil
+        if POST_RULES then
+            -- Log the POST parameters
+            for key, val in pairs(POST_ARGS or {}) do
                 local POST_DATA  -- Declare POST_DATA as a local variable
                 if type(val) == 'table' then
                     POST_DATA = table.concat(val, " ")
                 else
                     POST_DATA = tostring(val)  -- Convert POST_DATA to string to avoid boolean issues
                 end
-                if POST_DATA and rule ~= "" and rulematch(unescape(POST_DATA), rule, "jo") then
-                    log_record('Deny_POST', ngx.var.request_uri, "-", rule)
-                    if config_waf_enable == "on" then
-                        waf_output()
-                        return true
+                -- ngx.log(ngx.ERR, "POST parameter: ", key, " = ", POST_DATA)
+            end
+            
+            for _, rule in pairs(POST_RULES) do
+                for key, val in pairs(POST_ARGS or {}) do
+                    local POST_DATA  -- Declare POST_DATA as a local variable
+                    if type(val) == 'table' then
+                        POST_DATA = table.concat(val, " ")
+                    else
+                        POST_DATA = tostring(val)  -- Convert POST_DATA to string to avoid boolean issues
+                    end
+                    if POST_DATA and rule ~= "" and rulematch(unescape(POST_DATA), rule, "jo") then
+                        log_record('Deny_POST', ngx.var.request_uri, "-", rule)
+                        if config_waf_enable == "on" then
+                            waf_output()
+                            return true
+                        end
                     end
                 end
             end
@@ -333,6 +377,7 @@ function post_attack_check()
     end
     return false
 end
+
 
 -- Function to generate a random UUID
 local function generate_uuid()
